@@ -1,0 +1,9 @@
+name: xFood
+version: ${project.version}
+main: me.imdanix.food.FoodPlugin
+load: STARTUP
+authors: [imDaniX]
+description: Simple food plugin
+commands:
+  xfood:
+    aliases: [food]

@@ -1,0 +1,22 @@
+settings:
+  min_clicks: 10
+  min_time: 1
+  max_time: 3
+food:
+  mushroom:
+    type: BROWN_MUSHROOM
+    data: 0
+    food: 1
+    effects:
+      - HUNGER:1:10
+      - CONFUSION:1:10
+  cooked_mushroom:
+    type: BROWN_MUSHROOM
+    data: 0
+    food: 4
+    name: '&6Жаренный гриб'
+    lore:
+      - '&cПриготовлен с любовью'
+      - '&cПрямо из печки!'
+    effects:
+      - REGENERATION:1:2
