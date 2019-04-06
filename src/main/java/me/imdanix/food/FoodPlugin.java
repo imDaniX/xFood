@@ -25,8 +25,9 @@ public final class FoodPlugin extends JavaPlugin implements Listener {
 
 	private Map<String, FoodItem> food;
 	private Map<UUID, Eater> eaters;
-	private int minClicks, minTime, maxTime;
-	private final static PotionEffect slow=new PotionEffect(PotionEffectType.SLOW, 10, 2, true);
+	private int minClicks;
+	private double minTime, maxTime;
+	private final static PotionEffect slow=new PotionEffect(PotionEffectType.SLOW, 20, 2, true);
 
 	@Override
 	public void onEnable() {
@@ -34,7 +35,6 @@ public final class FoodPlugin extends JavaPlugin implements Listener {
 		Bukkit.getPluginManager().registerEvents(this, this);
 		eaters=new HashMap<>();
 		initConfig();
-		startScheduler();
 	}
 
 	@Override
@@ -64,30 +64,48 @@ public final class FoodPlugin extends JavaPlugin implements Listener {
 		Action act=e.getAction();
 		if(act==Action.PHYSICAL)
 			return;
-		else if(act==Action.LEFT_CLICK_AIR||act==Action.LEFT_CLICK_BLOCK)
+		if(act==Action.LEFT_CLICK_AIR||act==Action.LEFT_CLICK_BLOCK)
 			eaters.remove(e.getPlayer().getUniqueId());
 		else {
 			Player p=e.getPlayer();
 			if(act==Action.RIGHT_CLICK_BLOCK&&p.isSneaking())
 				return;
+			Eater eater=eaters.get(p.getUniqueId());
+			EquipmentSlot hand=EquipmentSlot.HAND;
 			FoodItem foodItem=getFood(p.getInventory().getItemInMainHand());
-			if(foodItem==null)
-				foodItem=getFood(p.getInventory().getItemInOffHand());
-			if(foodItem!=null) {
-				if(!p.hasPermission("xfood.eat."+foodItem.getId()))
+			if(foodItem==null) {
+				foodItem=getFood(p.getInventory().getItemInMainHand());
+				if(foodItem==null)
 					return;
-				e.setCancelled(true);
-				Eater eater=eaters.get(p.getUniqueId());
-				if(eater==null)
-					eaters.put(p.getUniqueId(), new Eater(p, foodItem.getId()));
-				else if(eater.getFood().equals(foodItem.getId())) {
-					p.addPotionEffect(slow);
-					World w = p.getWorld();
-					w.playSound(p.getEyeLocation(), Sound.ENTITY_GENERIC_EAT, 1 , 1);
-					w.spawnParticle(Particle.ITEM_CRACK,p.getEyeLocation(), 3,  0.1,0.1,0.1, 0.01, foodItem);
-					eater.addClick();
-				}
+				hand=EquipmentSlot.OFF_HAND;
 			}
+			e.setCancelled(true);
+			if(eater!=null) {
+				if(foodItem.getId().equals(eater.getFood())) {
+					double time=(System.currentTimeMillis()-eater.getStartTime());
+					if(time<minTime) {
+						p.addPotionEffect(slow);
+						World w = p.getWorld();
+						w.playSound(p.getEyeLocation(), Sound.ENTITY_GENERIC_EAT, 1 , 1);
+						w.spawnParticle(Particle.ITEM_CRACK,p.getEyeLocation(), 6,  0.1,0.1,0.1, 0.01, foodItem);
+						eater.addClick();
+						return;
+					} else
+					if(eater.getClicks()>=minClicks) {
+						PlayerInventory inv=p.getInventory();
+						if(hand==EquipmentSlot.HAND)
+							inv.setItemInMainHand(removeItem(inv.getItemInMainHand()));
+						else
+							inv.setItemInOffHand(removeItem(inv.getItemInOffHand()));
+						foodItem.eat(p);
+						p.getWorld().playSound(p.getEyeLocation(), Sound.ENTITY_PLAYER_BURP, 1 , 1);
+					} else
+					if(time<maxTime)
+						return;
+				}
+				eaters.remove(e.getPlayer().getUniqueId());
+			} else
+				eaters.put(p.getUniqueId(), new Eater(foodItem.getId()));
 		}
 	}
 
@@ -106,46 +124,11 @@ public final class FoodPlugin extends JavaPlugin implements Listener {
 		eaters.remove(e.getDamager().getUniqueId());
 	}
 
-	private void startScheduler() {
-		getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
-			for(Eater eater:eaters.values()) {
-				Player p=Bukkit.getPlayer(eater.getPlayer());
-				if(p==null) {
-					eaters.remove(eater);
-					return;
-				}
-				PlayerInventory inv=p.getInventory();
-				FoodItem foodItem=getFood(inv.getItemInMainHand());
-				EquipmentSlot hand=EquipmentSlot.HAND;
-				if(foodItem==null) {
-					foodItem=getFood(inv.getItemInOffHand());
-					hand=EquipmentSlot.OFF_HAND;
-				}
-				if(foodItem!=null&&foodItem.equals(food.get(eater.getFood()))) {
-					double time=(System.currentTimeMillis()-eater.getStartTime())/1000;
-					if(time<=maxTime) {
-						if(time>minTime&&eater.getClicks()>=minClicks) {
-							if(hand==EquipmentSlot.HAND)
-								inv.setItemInMainHand(removeItem(inv.getItemInMainHand()));
-							else
-								inv.setItemInOffHand(removeItem(inv.getItemInOffHand()));
-							foodItem.eat(p);
-							p.getWorld().playSound(p.getEyeLocation(), Sound.ENTITY_PLAYER_BURP, 1 , 1);
-							eaters.remove(eater.getPlayer());
-						}
-						continue;
-					}
-				}
-				eaters.remove(eater.getPlayer());
-			}
-		}, 5L, 5L);
-	}
-
 	private void initConfig() {
 		FileConfiguration cfg=getConfig();
 		minClicks=cfg.getInt("settings.min_clicks");
-		minTime=cfg.getInt("settings.min_time");
-		maxTime=cfg.getInt("settings.max_time");
+		minTime=cfg.getDouble("settings.min_time")*1000;
+		maxTime=cfg.getDouble("settings.max_time")*1000;
 		food=new HashMap<>();
 		for(String s:cfg.getConfigurationSection("food").getKeys(false)) {
 			s=s.toLowerCase();
@@ -161,6 +144,8 @@ public final class FoodPlugin extends JavaPlugin implements Listener {
 	}
 
 	private FoodItem getFood(ItemStack is) {
+		if(is==null)
+			return null;
 		for(FoodItem foodItem:food.values()) {
 			if(foodItem.isSimilar(is))
 				return foodItem;
@@ -173,8 +158,7 @@ public final class FoodPlugin extends JavaPlugin implements Listener {
 	}
 	static List<String> clr(List<String> ls) {
 		List<String> clred=new ArrayList<>();
-		for(String s:ls)
-			clred.add(clr(s));
+		ls.forEach(s->clred.add(clr(s)));
 		return clred;
 	}
 }
