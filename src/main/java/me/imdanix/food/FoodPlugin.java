@@ -24,7 +24,7 @@ public final class FoodPlugin extends JavaPlugin implements Listener {
 	@Override
 	public void onEnable() {
 		saveDefaultConfig();
-		Bukkit.getPluginManager().registerEvents(this, this);
+		Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
 		initData();
 	}
 
