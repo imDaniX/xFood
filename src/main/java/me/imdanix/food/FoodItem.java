@@ -33,9 +33,9 @@ public class FoodItem extends ItemStack {
 		super.setDurability((short)data);
 		ItemMeta im=super.getItemMeta();
 		if(name!=null)
-			im.setDisplayName(FoodPlugin.clr(name));
+			im.setDisplayName(Utils.clr(name));
 		if(lore!=null&&!lore.isEmpty())
-			im.setLore(FoodPlugin.clr(lore));
+			im.setLore(Utils.clr(lore));
 		super.setItemMeta(im);
 		this.food=food;
 		if(effects!=null) {
