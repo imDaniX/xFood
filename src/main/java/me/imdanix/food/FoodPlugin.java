@@ -56,7 +56,7 @@ public final class FoodPlugin extends JavaPlugin implements Listener {
 		minClicks=cfg.getInt("settings.min_clicks");
 		minTime=cfg.getDouble("settings.min_time")*1000;
 		maxTime=cfg.getDouble("settings.max_time")*1000;
-		debug=cfg.getBoolean("setiings.debug");
+		debug=cfg.getBoolean("settings.debug");
 		food=new HashMap<>();
 		eaters=new HashMap<>();
 		for(String s:cfg.getConfigurationSection("food").getKeys(false)) {
