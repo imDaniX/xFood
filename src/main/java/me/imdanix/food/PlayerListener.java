@@ -38,7 +38,7 @@ public class PlayerListener implements Listener {
 			EquipmentSlot hand=EquipmentSlot.HAND;
 			FoodItem foodItem=getFood(p.getInventory().getItemInMainHand());
 			if(foodItem==null) {
-				foodItem=getFood(p.getInventory().getItemInMainHand());
+				foodItem=getFood(p.getInventory().getItemInOffHand());
 				if(foodItem==null)
 					return;
 				hand=EquipmentSlot.OFF_HAND;
