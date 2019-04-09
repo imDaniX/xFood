@@ -44,17 +44,19 @@ public class PlayerListener implements Listener {
 				hand=EquipmentSlot.OFF_HAND;
 			}
 			if(eater!=null) {
+				sendDebug(p, "Eater found");
 				if(foodItem.getId().equals(eater.getFood())) {
 					double time=(System.currentTimeMillis()-eater.getStartTime());
-					if(time<getMinTime()) {
+					if(time<getMaxTime()) {
+						sendDebug(p, "Eating");
 						p.addPotionEffect(SLOW_EFFECT);
 						World w = p.getWorld();
 						w.playSound(p.getEyeLocation(), Sound.ENTITY_GENERIC_EAT, 1 , 1);
 						w.spawnParticle(Particle.ITEM_CRACK,p.getEyeLocation(), 6,  0.1,0.1,0.1, 0.01, foodItem);
 						eater.addClick();
-						return;
-					} else
-					if(eater.getClicks()>=getMinClicks()) {
+					}
+					if(time>getMinTime()&&eater.getClicks()>=getMinClicks()) {
+						sendDebug(p, "Eating finished");
 						PlayerInventory inv=p.getInventory();
 						if(hand==EquipmentSlot.HAND)
 							inv.setItemInMainHand(Utils.removeItem(inv.getItemInMainHand()));
@@ -62,13 +64,14 @@ public class PlayerListener implements Listener {
 							inv.setItemInOffHand(Utils.removeItem(inv.getItemInOffHand()));
 						foodItem.eat(p);
 						p.getWorld().playSound(p.getEyeLocation(), Sound.ENTITY_PLAYER_BURP, 1 , 1);
-					} else
-					if(time<getMaxTime())
-						return;
+					}
 				}
+				sendDebug(p, "Removing eater");
 				removeEater(e.getPlayer().getUniqueId());
-			} else
+			} else {
+				sendDebug(p, "New eater");
 				addEater(p.getUniqueId(), foodItem.getId());
+			}
 		}
 	}
 

@@ -21,6 +21,7 @@ public final class FoodPlugin extends JavaPlugin implements Listener {
 	private static Map<UUID, Eater> eaters;
 	private static int minClicks;
 	private static double minTime, maxTime;
+	private static boolean debug;
 	public final static PotionEffect SLOW_EFFECT=new PotionEffect(PotionEffectType.SLOW, 20, 2, true);
 
 	@Override
@@ -55,6 +56,7 @@ public final class FoodPlugin extends JavaPlugin implements Listener {
 		minClicks=cfg.getInt("settings.min_clicks");
 		minTime=cfg.getDouble("settings.min_time")*1000;
 		maxTime=cfg.getDouble("settings.max_time")*1000;
+		debug=cfg.getBoolean("setiings.debug");
 		food=new HashMap<>();
 		eaters=new HashMap<>();
 		for(String s:cfg.getConfigurationSection("food").getKeys(false)) {
@@ -92,5 +94,9 @@ public final class FoodPlugin extends JavaPlugin implements Listener {
 	}
 	static double getMaxTime() {
 		return maxTime;
+	}
+	public static void sendDebug(Player p, String s) {
+		if(debug&&p.hasPermission("xfood.debug"))
+			p.sendMessage(s);
 	}
 }
