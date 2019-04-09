@@ -54,16 +54,16 @@ public class PlayerListener implements Listener {
 						w.playSound(p.getEyeLocation(), Sound.ENTITY_GENERIC_EAT, 1 , 1);
 						w.spawnParticle(Particle.ITEM_CRACK,p.getEyeLocation(), 6,  0.1,0.1,0.1, 0.01, foodItem);
 						eater.addClick();
-					}
-					if(time>getMinTime()&&eater.getClicks()>=getMinClicks()) {
-						sendDebug(p, "Eating finished");
-						PlayerInventory inv=p.getInventory();
-						if(hand==EquipmentSlot.HAND)
-							inv.setItemInMainHand(Utils.removeItem(inv.getItemInMainHand()));
-						else
-							inv.setItemInOffHand(Utils.removeItem(inv.getItemInOffHand()));
-						foodItem.eat(p);
-						p.getWorld().playSound(p.getEyeLocation(), Sound.ENTITY_PLAYER_BURP, 1 , 1);
+						if(time>getMinTime()&&eater.getClicks()>=getMinClicks()) {
+							sendDebug(p, "Eating finished");
+							PlayerInventory inv=p.getInventory();
+							if(hand==EquipmentSlot.HAND)
+								inv.setItemInMainHand(Utils.removeItem(inv.getItemInMainHand()));
+							else
+								inv.setItemInOffHand(Utils.removeItem(inv.getItemInOffHand()));
+							foodItem.eat(p);
+							p.getWorld().playSound(p.getEyeLocation(), Sound.ENTITY_PLAYER_BURP, 1 , 1);
+						} else return;
 					}
 				}
 				sendDebug(p, "Removing eater");
