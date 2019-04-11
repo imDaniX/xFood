@@ -29,11 +29,8 @@ public class PlayerListener implements Listener {
 		if(act==Action.LEFT_CLICK_AIR||act==Action.LEFT_CLICK_BLOCK)
 			removeEater(p.getUniqueId());
 		else {
-			if(act==Action.RIGHT_CLICK_BLOCK) {
-				if(p.isSneaking())
-					return;
-				e.setCancelled(true);
-			}
+			if(act==Action.RIGHT_CLICK_BLOCK&&p.isSneaking())
+				return;
 			Eater eater=getEater(p.getUniqueId());
 			if(eater!=null) {
 				sendDebug(p, "Eater found");
@@ -48,6 +45,7 @@ public class PlayerListener implements Listener {
 					}
 					hand=EquipmentSlot.OFF_HAND;
 				}
+				e.setCancelled(true);
 				double time=(System.currentTimeMillis()-eater.getStartTime());
 				if(time<getMaxTime()) {
 					sendDebug(p, "Eating");
@@ -74,6 +72,7 @@ public class PlayerListener implements Listener {
 					foodItem=getFood(p.getInventory().getItemInOffHand());
 				if(foodItem==null)
 					return;
+				e.setCancelled(true);
 				sendDebug(p, "New eater");
 				addEater(p.getUniqueId(), foodItem.getId());
 			}
